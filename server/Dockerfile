@@ -1,6 +1,7 @@
 # Multi-stage build for smaller image
 FROM node:18-alpine AS deps
 WORKDIR /app
+
 # Install build deps (if needed)
 COPY package.json package-lock.json* ./
 RUN npm ci --production
