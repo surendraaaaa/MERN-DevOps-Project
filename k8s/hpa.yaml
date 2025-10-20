@@ -1,0 +1,40 @@
+---
+kind: HorizontalPodAutoscaling
+apiVersion: autoscaling/v1
+metadata:
+  name: frontendend-hpa
+  namespace: mern-shopping-app
+spec: 
+  scaletargetRef:
+    kind: Deployment
+    name: frontend-deployment
+    apiVersion: apps/v1
+  minReplicas: 1
+  maxReplicas: 3
+  matrics:
+  - type: resources:
+    resource: cpu
+    target: 
+      type: utilization
+      averageUtilization: 70
+---
+
+kind: HorizontalPodAutoscaling
+apiVersion: autoscaling/v1
+metadata:
+  name: backend-hpa
+  namespace: mern-shopping-app
+spec: 
+  scaletargetRef:
+    kind: Deployment
+    name: backend-deployment
+    apiVersion: apps/v1
+  minReplicas: 1
+  maxReplicas: 3
+  matrics:
+  - type: resources:
+    resource: cpu
+    target: 
+      type: utilization
+      averageUtilization: 70
+

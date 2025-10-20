@@ -1,0 +1,85 @@
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  namespace: mern-shopping-app
+  name: mongo-pv
+spec:
+  storageClassName: gp2
+  persistentVolumeReclaimPolicy: retain
+  capacity:
+    storage: 3Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath: 
+    path: /data/db
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  namespace: mern-shopping-app
+  name: mongo-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: mongo-deployment
+  namespace: mern-shopping-app
+  labels:
+    app: mongo
+spec:
+  replicas: 1
+  selectors:
+    matchLabels:
+      app: mongo
+  template:
+    metadata:
+      labels:
+        app: mongo
+    spec:
+      containers:
+      - name: mongo
+        image: mongo:6.0
+        ports:
+        - containerPort: 27017
+        volumeMoutns:
+          - mountPath: /data/db
+            name: mongo-pv-storage
+        volumes:
+          - name: mongo-pv-storage
+            persistentVolumeClaim:
+              claimName: mongo-pvc
+---
+kind: Service
+apiVersion: v1
+metadata: 
+  name: mongo-service
+  namespace: mern-shopping-app
+  labels:
+    app: mongo
+spec:
+  selectors:
+      app: mongo
+  ports:
+    protocol: TCP
+    port: 27017
+    targetPort:27017
+
+---
+# kind: ConigMap
+# apiVersion: v1
+# metadata:
+#   name: mongo-config
+#   namespace: mern-shopping-app
+# data:
+#   MONGO_USERNAME
+
+        
+
+        

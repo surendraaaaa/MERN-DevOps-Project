@@ -1,4 +1,4 @@
-kind: deployment 
+kind: Deployment 
 apiVersion: apps/v1
 metadata:
   name: frontend-deployment
@@ -39,7 +39,7 @@ spec:
   ports:
     - protocol: TCP
       port: 80
-      targetPort: 3000
+      targetPort: 80
 
 ---
 

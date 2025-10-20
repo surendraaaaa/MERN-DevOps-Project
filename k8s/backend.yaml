@@ -56,4 +56,4 @@ metadata:
   name: backend-config
   namespace: mern-shopping-app
 data: 
-  MONGODB_URI: "mongodb://mongo:27017/mern-shopping-app"
+  MONGODB_URI: MONGODB_URI: "mongodb://mongo-service:27017/mern-shopping-app"
