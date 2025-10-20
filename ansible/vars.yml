@@ -1,0 +1,3 @@
+kubernetes_deployment: true
+kubernetes_service: true
+kubernetes_configmap: false

@@ -1,0 +1,82 @@
+---
+- name: Configure Jenkins and SonarQube
+  hosts: jenkins_sonar
+  become: yes  # Elevate privileges to install software
+  tasks:
+
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install Java (required for Jenkins and SonarQube)
+      apt:
+        name: openjdk-11-jdk
+        state: present
+
+    - name: Install Jenkins
+      apt:
+        name: openjdk-11-jdk
+        state: present
+
+    - name: Add Jenkins repository
+      apt_repository:
+        repo: 'deb http://pkg.jenkins.io/debian/ stable main'
+        state: present
+
+    - name: Install Jenkins
+      apt:
+        name: jenkins
+        state: present
+
+    - name: Start Jenkins service
+      service:
+        name: jenkins
+        state: started
+        enabled: yes
+
+    - name: Install SonarQube (based on your setup)
+      apt:
+        name: sonar
+        state: present
+
+    - name: Start SonarQube service
+      service:
+        name: sonar
+        state: started
+        enabled: yes
+
+
+- name: Configure Artifactory
+  hosts: artifactory
+  become: yes  # Elevate privileges to install software
+  tasks:
+
+    - name: Install Java (required for Artifactory)
+      apt:
+        name: openjdk-11-jdk
+        state: present
+
+    - name: Download Artifactory tarball
+      get_url:
+        url: "https://bintray.com/jfrog/artifactory/download_file?file_path=jfrog-artifactory-pro-7.x.x-linux.tar.gz"
+        dest: "/tmp/artifactory.tar.gz"
+    
+    - name: Extract Artifactory tarball
+      unarchive:
+        src: "/tmp/artifactory.tar.gz"
+        dest: "/opt/"
+        remote_src: yes
+
+    - name: Create a symlink for Artifactory
+      file:
+        src: "/opt/jfrog-artifactory-pro-7.x.x-linux"
+        dest: "/opt/artifactory"
+        state: link
+
+    - name: Start Artifactory service
+      service:
+        name: artifactory
+        state: started
+        enabled: yes
+
+#ansible-playbook -i inventory.ini setup.yml

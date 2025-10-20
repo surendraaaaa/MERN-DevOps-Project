@@ -1,0 +1,51 @@
+---
+- name: Deploy to EKS
+  hosts: localhost
+  gather_facts: no
+  vars:
+    kubeconfig: "~/.kube/config"
+    image_tag: "{{ image_tag }}"  # Pass image tag from Jenkins
+
+  tasks:
+    - name: Set up kubectl for EKS cluster authentication
+      command: >
+        aws eks --region {{ region }} update-kubeconfig --name {{ cluster_name }}
+      environment:
+        AWS_PROFILE: "{{ aws_profile | default('default') }}"
+        AWS_REGION: "{{ region }}"
+
+    - name: Display kubectl configuration
+      command: kubectl config view
+      register: kubectl_config
+      failed_when: false
+
+    - name: Print the kubectl config
+      debug:
+        msg: "{{ kubectl_config.stdout }}"
+
+    - name: Deploy updated application to EKS (with updated image)
+      kubernetes.core.k8s:
+        kubeconfig: "{{ kubeconfig }}"
+        state: present
+        definition: "{{ lookup('file', 'k8s/all-in-one.yml') }}"  # Update deployment.yaml
+        validate_certs: false
+
+    - name: Verify deployment is running
+      kubernetes.core.k8s_facts:
+        kubeconfig: "{{ kubeconfig }}"
+      register: k8s_facts
+
+    - name: Check if the pods are running
+      debug:
+        msg: "Pods are running: {{ k8s_facts.resources }}"
+
+
+    
+# aws eks --region us-east-2 update-kubeconfig --name my-cluster
+#Summary:
+
+#Get the API endpoint using terraform output or AWS CLI for your EKS cluster.
+
+#Use kubectl or Ansible with the appropriate configuration to interact with your cluster.
+
+#Deploy apps using Kubernetes services (e.g., LoadBalancer) for external access.
