@@ -15,7 +15,8 @@ module "vpc" {
 
 module "ec2" {
   source = "./modules/ec2"
-
+  
+  instance_count    = 2
   env               = "dev"
   ami_id            = "ami-0cfde0ea8edd312d4"
   instance_type     = "m7i-flex.large"

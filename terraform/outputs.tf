@@ -12,3 +12,13 @@ output "eks_cluster_ca_certificate" {
   description = "Certificate authority data for the EKS cluster"
   value       = module.eks.eks_cluster_ca_certificate
 }
+
+output "jenkins_sonar_ip" {
+  value = module.ec2.public_ips[0]
+}
+
+output "artifactory_ip" {
+  value = module.ec2.public_ips[1]
+}
+
+
