@@ -1,7 +1,7 @@
 ---
 - name: Configure Jenkins and SonarQube
   hosts: jenkins_sonar
-  become: yes  # Elevate privileges to install software
+  become: yes 
   tasks:
 
     - name: Update apt cache

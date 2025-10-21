@@ -54,6 +54,16 @@ resource "aws_iam_role_policy_attachment" "node_AmazonEKS_CNI_Policy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
 }
 
+resource "aws_iam_role_policy_attachment" "eks_cluster_AmazonEKSServicePolicy" {
+  role       = aws_iam_role.eks_cluster_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSServicePolicy"
+}
+
+resource "aws_iam_role_policy_attachment" "eks_cluster_AmazonEKSVPCResourceController" {
+  role       = aws_iam_role.eks_cluster_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSVPCResourceController"
+}
+
 
 # EKS Cluster
 resource "aws_eks_cluster" "my_eks" {
@@ -65,8 +75,19 @@ resource "aws_eks_cluster" "my_eks" {
     subnet_ids = var.subnet_ids
   }
 
+  enabled_cluster_log_types = [
+    "api",
+    "audit",
+    "authenticator",
+    "controllerManager",
+    "scheduler"
+  ]
+
   depends_on = [
-    aws_iam_role_policy_attachment.eks_cluster_AmazonEKSClusterPolicy
+    aws_iam_role_policy_attachment.eks_cluster_AmazonEKSClusterPolicy,
+    aws_iam_role_policy_attachment.eks_cluster_AmazonEKSServicePolicy,
+    aws_iam_role_policy_attachment.eks_cluster_AmazonEKSVPCResourceController
+
   ]
 }
 
@@ -77,6 +98,7 @@ resource "aws_eks_node_group" "my_ng" {
   node_group_name = "${var.env}-${var.node_name}"
   node_role_arn   = aws_iam_role.eks_node_role.arn
   subnet_ids      = var.subnet_ids
+  instance_types  = var.instance_types
 
   scaling_config {
     desired_size = var.desired_node_size
@@ -88,9 +110,16 @@ resource "aws_eks_node_group" "my_ng" {
     max_unavailable = var.max_unavailable_size
   }
 
+  remote_access {
+    ec2_ssh_key               = "my-MERN-key"
+    source_security_group_ids = [var.security_group_id]
+  }
+
   depends_on = [
     aws_iam_role_policy_attachment.node_AmazonEKSWorkerNodePolicy,
     aws_iam_role_policy_attachment.node_AmazonEC2ContainerRegistryReadOnly,
     aws_iam_role_policy_attachment.node_AmazonEKS_CNI_Policy,
+    aws_iam_role_policy_attachment.eks_cluster_AmazonEKSServicePolicy,
+    aws_iam_role_policy_attachment.eks_cluster_AmazonEKSVPCResourceController
   ]
 }

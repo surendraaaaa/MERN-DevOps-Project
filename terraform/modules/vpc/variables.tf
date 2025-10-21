@@ -26,3 +26,9 @@ variable "allowed_ports" {
   description = "List of allowed ingress ports"
   default     = [22, 80, 443, 6443, 3000, 5000]
 }
+
+variable "cluster_name" {
+  description = "cluster name"
+  type        = string
+  default     = "my-MERN-eks-cluster"
+}
