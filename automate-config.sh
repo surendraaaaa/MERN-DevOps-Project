@@ -6,6 +6,10 @@ cd terraform
 terraform init
 terraform apply -auto-approve
 
+echo "Waiting for Terraform outputs to become available..."
+sleep 10
+terraform refresh
+
 # Step 2: Get EC2 Instance IPs from Terraform Output
 JENKINS_SONAR_IP=$(terraform output -raw jenkins_sonar_ip)
 ARTIFACTORY_IP=$(terraform output -raw artifactory_ip)
@@ -15,17 +19,31 @@ echo "Artifactory IP: $ARTIFACTORY_IP"
 
 # Step 3: Create an Ansible inventory dynamically
 cd ../ansible  # Assuming ansible is one level up from terraform directory
-cat > inventory.ini <<EOL
+mkdir -p inventories
+
+cat > inventories/production.ini <<EOL
+[eks_cluster]
+localhost ansible_connection=local
+
+[eks_cluster:vars]
+region=us-east-2
+cluster_name=dev-my-MERN-EKS-cluster-dev
+
 [jenkins_sonar]
-$JENKINS_SONAR_IP ansible_user=ubuntu ansible_ssh_private_key_file=/home/ubuntu/.ssh/my_key.pem
+MERN-instance-dev-1 ansible_host=$JENKINS_SONAR_IP
 
 [artifactory]
-$ARTIFACTORY_IP ansible_user=ubuntu ansible_ssh_private_key_file=/home/ubuntu/.ssh/my_key.pem
+MERN-instance-dev-2 ansible_host=$ARTIFACTORY_IP
+
+[all:vars]
+ansible_user=ubuntu
+ansible_ssh_private_key_file=~/terraform/modules/ec2/my_key.pem
 EOL
 
 # Step 4: Run Ansible playbook to configure EC2 instances
 echo "Configuring EC2 instances with Ansible..."
-ansible-playbook -i inventory.ini setup.yml
+ansible-playbook -i inventories/production.ini playbooks/setup.yml
+
 
 # pipeline {
 #     agent any

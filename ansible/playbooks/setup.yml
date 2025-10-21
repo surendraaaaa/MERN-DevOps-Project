@@ -1,82 +1,71 @@
 ---
-- name: Configure Jenkins and SonarQube
+- name: Configure Jenkins and SonarQube with Docker
   hosts: jenkins_sonar
-  become: yes 
+  become: yes
   tasks:
 
-    - name: Update apt cache
+    - name: Install Docker
       apt:
+        name: docker.io
+        state: present
         update_cache: yes
 
-    - name: Install Java (required for Jenkins and SonarQube)
-      apt:
-        name: openjdk-11-jdk
-        state: present
-
-    - name: Install Jenkins
-      apt:
-        name: openjdk-11-jdk
-        state: present
-
-    - name: Add Jenkins repository
-      apt_repository:
-        repo: 'deb http://pkg.jenkins.io/debian/ stable main'
-        state: present
-
-    - name: Install Jenkins
-      apt:
-        name: jenkins
-        state: present
-
-    - name: Start Jenkins service
+    - name: Start and enable Docker service
       service:
-        name: jenkins
+        name: docker
         state: started
         enabled: yes
 
-    - name: Install SonarQube (based on your setup)
-      apt:
-        name: sonar
-        state: present
-
-    - name: Start SonarQube service
-      service:
-        name: sonar
+    - name: Run Jenkins container
+      docker_container:
+        name: jenkins
+        image: jenkins/jenkins:lts
         state: started
-        enabled: yes
+        restart_policy: always
+        ports:
+          - "8080:8080"
+          - "50000:50000"
+        volumes:
+          - /var/jenkins_home:/var/jenkins_home
 
+    - name: Run SonarQube container
+      docker_container:
+        name: sonarqube
+        image: sonarqube:latest
+        state: started
+        restart_policy: always
+        ports:
+          - "9000:9000"
+        env:
+          SONAR_JDBC_URL: jdbc:postgresql://localhost:5432/sonar
+          SONAR_JDBC_USERNAME: sonar
+          SONAR_JDBC_PASSWORD: sonar
 
-- name: Configure Artifactory
+- name: Configure Artifactory with Docker
   hosts: artifactory
-  become: yes  # Elevate privileges to install software
+  become: yes
   tasks:
 
-    - name: Install Java (required for Artifactory)
+    - name: Install Docker
       apt:
-        name: openjdk-11-jdk
+        name: docker.io
         state: present
+        update_cache: yes
 
-    - name: Download Artifactory tarball
-      get_url:
-        url: "https://bintray.com/jfrog/artifactory/download_file?file_path=jfrog-artifactory-pro-7.x.x-linux.tar.gz"
-        dest: "/tmp/artifactory.tar.gz"
-    
-    - name: Extract Artifactory tarball
-      unarchive:
-        src: "/tmp/artifactory.tar.gz"
-        dest: "/opt/"
-        remote_src: yes
-
-    - name: Create a symlink for Artifactory
-      file:
-        src: "/opt/jfrog-artifactory-pro-7.x.x-linux"
-        dest: "/opt/artifactory"
-        state: link
-
-    - name: Start Artifactory service
+    - name: Start and enable Docker service
       service:
-        name: artifactory
+        name: docker
         state: started
         enabled: yes
+
+    - name: Run Artifactory OSS container
+      docker_container:
+        name: artifactory
+        image: releases-docker.jfrog.io/jfrog/artifactory-oss:latest
+        state: started
+        restart_policy: always
+        ports:
+          - "8081:8081"
+
 
 #ansible-playbook -i inventory.ini setup.yml
