@@ -53,6 +53,14 @@ resource "aws_security_group" "my_sg" {
     description = "Allow Kubernetes NodePort range"
   }
 
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]  # Change to specific IP range if needed
+    description = "Allow inbound SSH traffic"
+  }
+
   egress {
     from_port   = 0
     to_port     = 0

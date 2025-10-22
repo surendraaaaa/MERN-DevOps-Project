@@ -9,7 +9,7 @@ module "vpc" {
   vpc_cidr           = "10.0.0.0/16"
   availability_zones = ["us-east-2a", "us-east-2b"]
   subnet_cidr        = "10.0.0.0/24"
-  allowed_ports      = [22, 80, 443, 6443, 3000, 5000]
+  allowed_ports      = [80, 443, 6443, 3000, 5000]
   cluster_name       = local.cluster_name
 }
 
